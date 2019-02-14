@@ -1,0 +1,48 @@
+#+TITLE: UCONS - Unique CONSes
+
+Some applications benefit a lot by reusing existing cons cells instead of
+actual consing.  Usually this technique is called hash consing.  Users of
+this technique are e.g. the optimizer of the computer algebra system Maxima
+and the theorem prover ACL2.
+
+This particular implementation is intended for use cases where performance
+is so critical, that even a single hash table access per cons is too
+expensive.  To achieve such near-optimal speed, this library does not
+actually provide conses, but uconses.  A ucons has not only a car and a
+cdr, but also a table of past users.  Furthermore, the cdr of each ucons is
+restricted to other uconses or NIL.  This setup has several advantages:
+
+- Checking whether a certain ucons already exists is a single lookup of its
+  car in the table of its cdr.
+
+- The immutability of a ucons is enforced by its defstruct definition
+
+- The compiler has reliable type information of the slots of a ucons.
+
+- Lists of uconses are neither circular, nor improper.
+
+Unfortunately there is also a painful downside of this approach.
+Traditional cons cells are a fundamental Lisp data type and well supported
+throughout the standard library.  Uconses lack this integration and require
+a completely new set of library functions.  Furthermore it must be noted
+that uconses are --- except if one explicitly clears the *ROOT-TABLE* --- a
+permanent memory leak.
+
+Yet if you are willing to accept these trade-offs, uconses offer some
+unique benefits:
+
+- their usage is little more expensive than a call to CONS. If you include
+  GC time, they can even be much faster.
+
+- given enough potential for structural sharing, uconses can decrease the
+  memory consumption of an application by orders of magnitude.
+
+- checks for structural similarity can be done in constant time.  Two ucons
+  trees are equal if and only if their roots are EQL.
+
+Benchmarks (SBCL 1.3.20, X86-64 Intel i7-5500U CPU @ 2.40GHz):
+
+#+BEGIN_SRC lisp
+(bench  (list 1 2 3 4 5 6 7 8)) ; -> 25.77 nanoseconds
+(bench (ulist 1 2 3 4 5 6 7 8)) ; -> 38.18 nanoseconds
+#+END_SRC
