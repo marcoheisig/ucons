@@ -22,5 +22,6 @@
    #:umapcar
    #:ulength
    #:list-from-ulist
+   #:ulist-from-list
    #:tree-from-utree
    #:utree-from-tree))
