@@ -16,12 +16,18 @@
    #:ucons-readtable
 
    ;; Library
+   #:upush
+   #:upop
+   #:do-ulist
    #:ulist
    #:ulist*
-   #:do-ulist
-   #:umapcar
    #:ulength
-   #:list-from-ulist
+   #:unth
+   #:unthcdr
+   #:ulist-from-vector
    #:ulist-from-list
+   #:utree-from-tree
+   #:vector-from-ulist
+   #:list-from-ulist
    #:tree-from-utree
-   #:utree-from-tree))
+   #:umapcar))

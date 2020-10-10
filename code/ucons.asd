@@ -5,7 +5,8 @@
 
   :depends-on
   ("alexandria"
-   "named-readtables")
+   "named-readtables"
+   "trivia")
 
   :serial t
   :components
