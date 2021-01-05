@@ -37,8 +37,7 @@
  (ftype (function (ucons)   t)     ucar)
  (ftype (function (ucons)   ulist) ucdr)
  (ftype (function (t ulist) ucons) ucons)
- (ftype (function (t)       ucons) ucons-leaf)
- (ftype (function (t ucons) ucons) ucons-hash ucons-list))
+ (ftype (function (t)       ucons) ucons-leaf))
 
 ;; The number of entries in a table after which we change it from an alist
 ;; to a hash table.
