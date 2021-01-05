@@ -5,12 +5,15 @@
 
   :depends-on
   ("alexandria"
+   "atomics"
    "named-readtables"
-   "trivia")
+   "trivia"
+   "bordeaux-threads")
 
   :serial t
   :components
   ((:file "packages")
+   (:file "chash")
    (:file "ucons")
    (:file "library")
    (:file "readtable")
