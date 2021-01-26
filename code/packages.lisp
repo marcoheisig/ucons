@@ -10,6 +10,7 @@
    #:ucdr
    #:*root-table*
    #:make-root-table
+   #:root-table
 
    ;; Readtable
    #:read-ulist
