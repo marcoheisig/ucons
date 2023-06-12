@@ -21,10 +21,13 @@
      (with-caching (*atom-cache* cdr :inline t)
        (make-cache)))))
 
+(declaim (ftype (function (t t) (values ucons &optional)) ucons))
+
 (defun ucons (car cdr)
   (declare (optimize (speed 3) (safety 0)))
-  (with-caching ((cdr-cache cdr) car :inline t)
-    (make-fresh-ucons car cdr)))
+  (the (values ucons &optional)
+       (with-caching ((cdr-cache cdr) car :inline t)
+         (make-fresh-ucons car cdr))))
 
 (defmethod make-load-form ((ucons ucons) &optional env)
   (declare (ignore env))

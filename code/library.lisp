@@ -166,9 +166,8 @@
 have been converted to lists."
   (if (not (uconsp utree))
       utree
-      (loop for rest = utree then (ucdr rest)
-            until (null rest)
-            collect (tree-from-utree (ucar rest)))))
+      (cons (tree-from-utree (ucar utree))
+            (tree-from-utree (ucdr utree)))))
 
 (defun utree-from-tree (tree)
   (if (atom tree)

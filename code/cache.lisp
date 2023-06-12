@@ -24,40 +24,38 @@ hash table.")
   #+ccl
   (ensure-concurrent-hash-table-entry (cache-data cache) key (funcall thunk))
   #-ccl
-  (let ((value '.unevaluated.))
-    (flet ((value ()
-             (if (eq value '.unevaluated.)
-                 (setf value (funcall thunk))
-                 value)))
-      (symbol-macrolet ((value (value)))
-        (tagbody retry
-           (let ((data (cache-data cache)))
-             (etypecase data
-               (null
-                (unless (atomics:cas (cache-data cache) nil `((,key . ,value)))
-                  (go retry))
-                (return-from call-with-caching value))
-               (cons
-                (do* ((tail data next)
-                      (count 0 (1+ count))
-                      (entry (first tail) (first tail))
-                      (next (rest tail) (rest tail)))
-                     ((= count +cache-hash-threshold+)
-                      (let* ((result value)
-                             (alist `((,key . ,value) ,@data))
-                             (table (concurrent-hash-table-from-alist alist)))
-                        (unless (atomics:cas (cache-data cache) data table)
-                          (go retry))
-                        (return-from call-with-caching result)))
-                  (declare (cons tail) (fixnum count))
-                  (cond ((eql (car entry) key)
-                         (return-from call-with-caching (cdr entry)))
-                        ((atom next)
-                         (unless (atomics:cas (cdr tail) next `((,key . ,value)))
-                           (go retry))
-                         (return-from call-with-caching value)))))
-               (concurrent-hash-table
-                (ensure-concurrent-hash-table-entry data key value)))))))))
+  (flet ((compute-value () (funcall thunk)))
+    (tagbody retry
+       (let ((data (cache-data cache)))
+         (etypecase data
+           (null
+            (let ((value (compute-value)))
+              (unless (atomics:cas (cache-data cache) nil `((,key . ,value)))
+                (go retry))
+              (return-from call-with-caching value)))
+           (cons
+            (do* ((tail data next)
+                  (count 0 (1+ count))
+                  (entry (first tail) (first tail))
+                  (next (rest tail) (rest tail)))
+                 ((= count +cache-hash-threshold+)
+                  (let* ((value (compute-value))
+                         (alist `((,key . ,value) ,@data))
+                         (table (concurrent-hash-table-from-alist alist)))
+                    (unless (atomics:cas (cache-data cache) data table)
+                      (go retry))
+                    (return-from call-with-caching value)))
+              (declare (cons tail) (fixnum count))
+              (cond ((eql (car entry) key)
+                     (return-from call-with-caching (cdr entry)))
+                    ((atom next)
+                     (let ((value (compute-value)))
+                       (unless (atomics:cas (cdr tail) next `((,key . ,value)))
+                         (go retry))
+                       (return-from call-with-caching value))))))
+           (concurrent-hash-table
+            (return-from call-with-caching
+              (ensure-concurrent-hash-table-entry data key (compute-value)))))))))
 ;;; Store the inline expansion, but don't inline by default.
 (declaim (notinline call-with-caching))
 
