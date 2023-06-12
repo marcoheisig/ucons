@@ -13,7 +13,8 @@
   :serial t
   :components
   ((:file "packages")
-   (:file "chash")
+   (:file "concurrent-hash-table")
+   (:file "cache")
    (:file "ucons")
    (:file "library")
    (:file "readtable")

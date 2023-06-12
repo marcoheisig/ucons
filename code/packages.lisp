@@ -3,14 +3,17 @@
 (defpackage #:ucons
   (:use #:common-lisp)
   (:export
+   ;; Cache
+   #:make-cache
+   #:cachep
+   #:with-caching
+
    ;; Core Functionality
    #:ucons
    #:uconsp
    #:ucar
    #:ucdr
-   #:*root-table*
-   #:make-root-table
-   #:root-table
+   #:*atom-cache*
 
    ;; Readtable
    #:read-ulist

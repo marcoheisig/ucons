@@ -64,19 +64,15 @@
 (defun ulist* (&rest args)
   "Return the ulist associated with the supplied arguments, but using the
    last argument as the tail of the constructed ulist."
-  (declare (dynamic-extent args))
-  (labels ((aux (first rest)
-             (if (null rest)
-                 (the ulist first)
-                 (ucons first (aux (car rest) (cdr rest))))))
-    (aux (first args) (rest args))))
+  (reduce #'ucons args
+          :from-end t))
 
 (define-compiler-macro ulist* (&rest arg-forms)
   (let* ((n (length arg-forms))
          (gensyms (loop repeat n collect (gensym "ARG"))))
     `(let* ,(mapcar #'list gensyms arg-forms)
        ,(let* ((rgensyms (reverse gensyms))
-               (result-form `(the ulist ,(car rgensyms))))
+               (result-form (car rgensyms)))
           (loop for gensym in (cdr rgensyms)
                 do (setf result-form `(ucons ,gensym ,result-form)))
           result-form))))
@@ -143,10 +139,22 @@
       (incf index))))
 
 (defun list-from-ulist (ulist)
-  "Return a list of the elements of ULIST."
+  "Return a (possibly dotted) list of the elements of the supplied ulist."
   (declare (ulist ulist))
-  (loop for rest = ulist then (ucdr rest)
-        until (null rest) collect (ucar rest)))
+  (let* ((head (cons nil nil))
+         (tail head))
+    (declare (cons head tail))
+    (declare (dynamic-extent head))
+    (loop for urest = ulist then (ucdr urest) do
+      (etypecase urest
+        (ucons
+         (let ((new-tail (list (ucar urest))))
+           (setf (cdr tail) new-tail)
+           (setf tail new-tail)))
+        (t
+         (setf (cdr tail) urest)
+         (return))))
+    (cdr head)))
 
 (defun ulist-from-list (list)
   (reduce #'ucons list
